@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaClient } from '@prisma/client';
+import { FindTaskDto } from './dto/find-task.dto';
 
 @Injectable()
 export class TasksService {
@@ -35,7 +36,24 @@ export class TasksService {
     if (!findResp) {
       throw new HttpException('Usuario invalido', HttpStatus.NOT_FOUND);
     }
-    return findResp;
+    const tasksPromises = findResp.map(async (task): Promise<FindTaskDto> => {
+      const user = await this.prisma.user.findUnique({
+        where: { id: task.userId },
+      });
+
+      return {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        status: task.status,
+        user,
+      };
+    });
+
+    const tasks = await Promise.all(tasksPromises);
+
+    return tasks;
   }
 
   findOne(id: number) {

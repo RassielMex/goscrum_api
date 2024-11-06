@@ -1,5 +1,5 @@
 import { Task, User } from '@prisma/client';
 
-export interface GetTaskDto extends Task {
+export interface FindTaskDto extends Omit<Task, 'userId'> {
   user: User;
 }
